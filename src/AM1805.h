@@ -23,7 +23,7 @@
 // Device Address
 #define AM1805_I2C_ADDR             0x69
 
-#define AM1805_I2C_TIMEOUT_MS       (2)
+#define AM1805_I2C_TIMEOUT_MS       (100)
 #define AM1805_PIN_INVALID          (PIN_INVALID)
 
 // Register Address
