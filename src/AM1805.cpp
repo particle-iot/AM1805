@@ -456,9 +456,11 @@ uint8_t AM1805::get_osc_status(uint8_t mask)
     uint8_t reg = read_register(AM1805_OSC_STATUS_REG, mask);
     if(mask == AM1805_OSC_STATUS_XTCAL_MASK)
     {
-        return (reg >> 6);
+        // 2-bit register so mask and shift
+        return ((reg & mask) >> 6);
     }
-    return reg ? 1 : 0;
+    // othewise a single bit register so just return the single-bit value
+    return (reg & mask) ? 1 : 0;
 }
 
 bool AM1805::clear_osc_status_of_bit(void)
