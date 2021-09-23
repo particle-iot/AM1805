@@ -186,6 +186,7 @@
 
 typedef enum
 {
+    AM1805_CFG_KEY_NONE = 0x00,
     AM1805_CFG_KEY_OSC = 0xA1,
     AM1805_CFG_KEY_GEN_SOFT_RST = 0x3C,
     AM1805_CFG_KEY_TRICKLE_BREF_AFCTRL_BATMODE_OC = 0x9D,
@@ -615,7 +616,7 @@ public:
     bool enter_sleep_mode();
 
 
-        /**
+    /**
      * @brief Configuration Key for the registers
      *
      * @details
@@ -626,6 +627,13 @@ public:
      * @param[in] type : am1805_configuration_key_t
      */
     bool set_configuration_key(am1805_configuration_key_t type);
+
+    /**
+     * @brief Clear Configuration Key for the registers, restoring write protection.
+     *
+     * @param[in] type : am1805_configuration_key_t
+     */
+    bool clear_configuration_key();
 
 private:
     TwoWire &_wire;
