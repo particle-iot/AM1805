@@ -160,6 +160,13 @@
 #define AM1805_OSC_CONTROL_OFIE_MASK    0x02
 #define AM1805_OSC_CONTROL_ACIE_MASK    0x01
 
+//OSC Status Mask
+#define AM1805_OSC_STATUS_XTCAL_MASK    0xC0
+#define AM1805_OSC_STATUS_LKO2_MASK     0x20
+#define AM1805_OSC_STATUS_OMODE_MASK    0x10
+#define AM1805_OSC_STATUS_OF_MASK       0x02
+#define AM1805_OSC_STATUS_ACF_MASK      0x01
+
 //WDT Register Mask
 #define AM1805_WDT_REGISTER_WDS_MASK    0x80
 #define AM1805_WDT_REGISTER_BMB_MASK    0x7C
@@ -176,6 +183,14 @@
 #define AM1805_WDT_REGISTER_WRB_FOUR_HZ      (0x01)
 #define AM1805_WDT_REGISTER_WRB_SIXTEEN_HZ   (0x00)
 
+
+typedef enum
+{
+    AM1805_CFG_KEY_NONE = 0x00,
+    AM1805_CFG_KEY_OSC = 0xA1,
+    AM1805_CFG_KEY_GEN_SOFT_RST = 0x3C,
+    AM1805_CFG_KEY_TRICKLE_BREF_AFCTRL_BATMODE_OC = 0x9D,
+} am1805_configuration_key_t;
 
 typedef enum
 {
@@ -488,6 +503,21 @@ public:
     bool set_osc_control(uint8_t mask, uint8_t value);
 
     /**
+     * @brief Oscillator Status Register 
+     * @param[in] mask : filter mask
+     *  mask list
+     *   - AM1805_OSC_STATUS_XTCAL_MASK
+     *   - AM1805_OSC_STATUS_LKO2_MASK
+     *   - AM1805_OSC_STATUS_OMODE_MASK
+     *   - AM1805_OSC_STATUS_OF_MASK
+     *   - AM1805_OSC_STATUS_ACF_MASK
+     * @return value that read from register
+     */
+    uint8_t get_osc_status(uint8_t mask);
+    bool    clear_osc_status_of_bit(void);
+
+
+    /**
      * @brief Get WDT register
      * @param[in] mask : filter mask
      *  mask list
@@ -584,6 +614,26 @@ public:
      */
     void sleep_forever(bool enable_exit = true);
     bool enter_sleep_mode();
+
+
+    /**
+     * @brief Configuration Key for the registers
+     *
+     * @details
+     *  - Writing a value of 0xA1 enables write access to the Oscillator Control register
+     *  - Writing a value of 0x3C does not update the Configuration Key register, but generates a Software Reset (see Software Reset).
+     *  - Writing a value of 0x9D enables write access to the Trickle Register (0x20), the BREF Register (0x21), the AFCTRL Register (0x26), the Batmode I/O Register (0x27) and the Output Control Register (0x30)
+     *
+     * @param[in] type : am1805_configuration_key_t
+     */
+    bool set_configuration_key(am1805_configuration_key_t type);
+
+    /**
+     * @brief Clear Configuration Key for the registers, restoring write protection.
+     *
+     * @param[in] type : am1805_configuration_key_t
+     */
+    bool clear_configuration_key();
 
 private:
     TwoWire &_wire;

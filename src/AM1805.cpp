@@ -421,6 +421,8 @@ uint8_t AM1805::get_osc_control(uint8_t mask)
 bool AM1805::set_osc_control(uint8_t mask, uint8_t value)
 {
     uint8_t reg = read_register(AM1805_OSC_CONTROL_REG) & (~mask);
+    bool rval;
+
     if(value)
     {
         if(mask == AM1805_OSC_CONTROL_ACAL_MASK)
@@ -432,7 +434,39 @@ bool AM1805::set_osc_control(uint8_t mask, uint8_t value)
             reg |= mask;
         }
     }
-    return !write_register(AM1805_OSC_CONTROL_REG, reg);
+    // enable write access to the OSC register
+    set_configuration_key(AM1805_CFG_KEY_OSC);
+    // write the update register contents
+    rval = !write_register(AM1805_OSC_CONTROL_REG, reg);
+    // and restore write protection to the OSC register
+    clear_configuration_key();
+    return rval;
+}
+
+/** Get Oscillator Status Register 
+ *  mask list
+ *   - AM1805_OSC_STATUS_XTCAL_MASK
+ *   - AM1805_OSC_STATUS_LKO2_MASK
+ *   - AM1805_OSC_STATUS_OMODE_MASK
+ *   - AM1805_OSC_STATUS_OF_MASK
+ *   - AM1805_OSC_STATUS_ACF_MASK
+ */
+uint8_t AM1805::get_osc_status(uint8_t mask)
+{
+    uint8_t reg = read_register(AM1805_OSC_STATUS_REG, mask);
+    if(mask == AM1805_OSC_STATUS_XTCAL_MASK)
+    {
+        // 2-bit register so mask and shift
+        return ((reg & mask) >> 6);
+    }
+    // othewise a single bit register so just return the single-bit value
+    return (reg & mask) ? 1 : 0;
+}
+
+bool AM1805::clear_osc_status_of_bit(void)
+{
+    uint8_t reg = read_register(AM1805_OSC_STATUS_REG) & (~AM1805_OSC_STATUS_OF_MASK);
+    return !write_register(AM1805_OSC_STATUS_REG, reg);
 }
 
 /** Get/Set WDT Register
@@ -692,4 +726,25 @@ bool AM1805::enter_sleep_mode()
     Log.info("SLP=%d", slp);
     delay(100);
     return slp;
+}
+
+/** Set configuration key
+ *  config type list
+ *   - AM1805_CFG_KEY_NONE
+ *   - AM1805_CFG_KEY_OSC
+ *   - AM1805_CFG_KEY_GEN_SOFT_RST
+ *   - AM1805_CFG_KEY_TRICKLE_BREF_AFCTRL_BATMODE_OC
+ */
+bool AM1805::set_configuration_key(am1805_configuration_key_t type)
+{
+    uint8_t reg = (uint8_t)type;
+    return !write_register(AM1805_CONFIG_KEY_REG, reg);    
+}
+
+/** 
+ * Clear configuration key, restoring all write protection
+ */
+bool AM1805::clear_configuration_key()
+{
+    return set_configuration_key(AM1805_CFG_KEY_NONE);
 }
